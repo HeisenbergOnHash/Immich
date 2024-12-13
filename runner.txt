@@ -1,0 +1,8 @@
+# with TPU 
+
+  # Install Edge TPU runtime and pycoral
+  RUN pip install pycoral
+  RUN apt-get update && apt-get install -y libedgetpu1-std
+  
+  docker-compose down
+  docker-compose up -d
