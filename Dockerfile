@@ -10,6 +10,7 @@ ENV DB_USERNAME=DB_USERNAME
 ENV DB_PASSWORD=DB_PASSWORD
 ENV DB_DATABASE_NAME=DB_DATABASE_NAME
 
+
 # Create the necessary directories
 RUN mkdir -p /usr/src/app/upload /cache /var/lib/postgresql/data
 
@@ -29,6 +30,9 @@ EXPOSE 8085
 # Copy the necessary files to the container
 COPY . /usr/src/app
 
+# Ensure start.sh is executable
+RUN chmod +x /usr/src/app/start.sh
+
 # Set the working directory
 WORKDIR /usr/src/app
 
@@ -36,4 +40,4 @@ WORKDIR /usr/src/app
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Start the application using the most efficient method
-CMD ["/bin/bash", "start.sh"]
+CMD ["/bin/bash", "/usr/src/app/start.sh"]
