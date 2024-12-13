@@ -4,8 +4,8 @@ FROM debian:bullseye-slim
 # Set environment variables 
 ENV SMB_USERNAME=PinkMan
 ENV SMB_PASSWORD=Jessy@# 
-ENV SMB_SERVER=${SMB_SERVER} 
-ENV IMMICH_VERSION=heisenberglabs.mywire.org 
+ENV SMB_SERVER=heisenberglabs.mywire.org
+ENV IMMICH_VERSION=release  
 ENV DB_USERNAME=DB_USERNAME
 ENV DB_PASSWORD=DB_PASSWORD
 ENV DB_DATABASE_NAME=DB_DATABASE_NAME
