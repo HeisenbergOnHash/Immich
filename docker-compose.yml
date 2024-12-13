@@ -1,29 +1,17 @@
-volumes:  # To use SMB as volume
-  db-data:
+volumes:
+  base-smb:
     driver: local
     driver_opts:
       type: cifs
       o: username=${SMB_USERNAME},password=${SMB_PASSWORD},vers=3.0
-      device: "//${SMB_SERVER}/test-immich/database/data"
-  immich-upload:
-    driver: local
-    driver_opts:
-      type: cifs
-      o: username=${SMB_USERNAME},password=${SMB_PASSWORD},vers=3.0
-      device: "//${SMB_SERVER}/test-immich/upload/directory"
-  model-cache:
-    driver: local
-    driver_opts:
-      type: cifs
-      o: username=${SMB_USERNAME},password=${SMB_PASSWORD},vers=3.0
-      device: "//${SMB_SERVER}/test-immich/model/cache"
+      device: "//${SMB_SERVER}/test-immich"
 
 services:
   immich-server:
     container_name: immich_server
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
     volumes:
-      - immich-upload:/usr/src/app/upload   
+      - base-smb:/usr/src/app/upload:rw,subdir=/upload/directory
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - .env
@@ -42,7 +30,7 @@ services:
     container_name: immich_machine_learning
     image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
     volumes:
-      - model-cache:/cache   
+      - base-smb:/cache:rw,subdir=/model/cache
     env_file:
       - .env
     restart: always
@@ -67,7 +55,7 @@ services:
       POSTGRES_DB: ${DB_DATABASE_NAME}
       POSTGRES_INITDB_ARGS: '--data-checksums'
     volumes:
-      - db-data:/var/lib/postgresql/data   
+      - base-smb:/var/lib/postgresql/data:rw,subdir=/database/data
     healthcheck:
       test: >-
         pg_isready --dbname="$${POSTGRES_DB}" --username="$${POSTGRES_USER}" || exit 1;
