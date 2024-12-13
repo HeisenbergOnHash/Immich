@@ -1,11 +1,29 @@
-name: immich
+volumes:  # To use SMB as volume
+  db-data:
+    driver: local
+    driver_opts:
+      type: cifs
+      o: username=${SMB_USERNAME},password=${SMB_PASSWORD},vers=3.0
+      device: "//${SMB_SERVER}/test-immich/database/data"
+  immich-upload:
+    driver: local
+    driver_opts:
+      type: cifs
+      o: username=${SMB_USERNAME},password=${SMB_PASSWORD},vers=3.0
+      device: "//${SMB_SERVER}/test-immich/upload/directory"
+  model-cache:
+    driver: local
+    driver_opts:
+      type: cifs
+      o: username=${SMB_USERNAME},password=${SMB_PASSWORD},vers=3.0
+      device: "//${SMB_SERVER}/test-immich/model/cache"
 
 services:
   immich-server:
     container_name: immich_server
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
     volumes:
-      - ${UPLOAD_LOCATION}:/usr/src/app/upload
+      - immich-upload:/usr/src/app/upload   
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - .env
@@ -24,11 +42,9 @@ services:
     container_name: immich_machine_learning
     image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
     volumes:
-      - model-cache:/cache
+      - model-cache:/cache   
     env_file:
       - .env
-    # devices: # If Coral TPU is Available 
-    #   - "/dev/bus/usb:/dev/bus/usb"  # Grant access to USB devices (Coral TPU)
     restart: always
     healthcheck:
       disable: false
@@ -51,7 +67,7 @@ services:
       POSTGRES_DB: ${DB_DATABASE_NAME}
       POSTGRES_INITDB_ARGS: '--data-checksums'
     volumes:
-      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data   
     healthcheck:
       test: >-
         pg_isready --dbname="$${POSTGRES_DB}" --username="$${POSTGRES_USER}" || exit 1;
@@ -72,14 +88,14 @@ services:
       -c wal_compression=on
     restart: always
 
-    watchtower:
-      container_name: watchtower
-      image: containrrr/watchtower
-      environment:
-        - WATCHTOWER_CLEANUP=true # Clean up old images to free up space
-        - WATCHTOWER_LABEL_ENABLE=true # Only update containers with this label
-        - WATCHTOWER_INCLUDE_RESTARTING=true # Restart containers during updates
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
-      command: --label-enable --cleanup --run-once
-      restart: always
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    environment:
+      - WATCHTOWER_CLEANUP=true # Clean up old images to free up space
+      - WATCHTOWER_LABEL_ENABLE=true # Only update containers with this label
+      - WATCHTOWER_INCLUDE_RESTARTING=true # Restart containers during updates
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --label-enable --cleanup --run-once
+    restart: always
