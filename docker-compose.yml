@@ -1,5 +1,8 @@
+
+
 volumes:
-  base-smb:
+  immich_postgres_data: # Docker-managed volume for PostgreSQL data
+  base-smb:             # Keep the SMB volume if you want to use it for file uploads
     driver: local
     driver_opts:
       type: cifs
@@ -16,7 +19,7 @@ services:
     env_file:
       - .env
     ports:
-      - '2283:2283'
+      - '8085:8085'
     depends_on:
       - redis
       - database
@@ -55,7 +58,7 @@ services:
       POSTGRES_DB: ${DB_DATABASE_NAME}
       POSTGRES_INITDB_ARGS: '--data-checksums'
     volumes:
-      - base-smb:/var/lib/postgresql/data:rw,subdir=/database/data
+      - immich_postgres_data:/var/lib/postgresql/data:rw  # Use Docker-managed volume
     healthcheck:
       test: >-
         pg_isready --dbname="$${POSTGRES_DB}" --username="$${POSTGRES_USER}" || exit 1;
@@ -82,7 +85,6 @@ services:
     environment:
       - WATCHTOWER_CLEANUP=true # Clean up old images to free up space
       - WATCHTOWER_LABEL_ENABLE=true # Only update containers with this label
-      - WATCHTOWER_INCLUDE_RESTARTING=true # Restart containers during updates
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --label-enable --cleanup --run-once
