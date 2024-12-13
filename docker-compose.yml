@@ -27,6 +27,8 @@ services:
       - model-cache:/cache
     env_file:
       - .env
+    # devices: # If Coral TPU is Available 
+    #   - "/dev/bus/usb:/dev/bus/usb"  # Grant access to USB devices (Coral TPU)
     restart: always
     healthcheck:
       disable: false
